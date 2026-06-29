@@ -227,21 +227,23 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
 
 /* === PRESUPUESTO BAR === */
 .presupuesto-bar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   background: #2d1054;
-  border: 1px solid #6d28d9;
-  border-radius: 10px;
-  padding: 0.7rem 1rem;
+  border-top: 2px solid #6d28d9;
+  padding: 0.8rem 1rem;
   text-align: center;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: #c084fc;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.4);
 }
-.presupuesto-bar span { color: #f1c40f; font-size: 1.2rem; }
+.presupuesto-bar span { color: #f1c40f; font-size: 1.3rem; }
+
+.spacer-bottom { height: 70px; }
 
 /* === TOAST === */
 .toast {
