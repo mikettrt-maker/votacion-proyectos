@@ -19,19 +19,14 @@
   .growth-header .grado-tab.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
   .growth-header .grado-tab:hover { border-color: #a855f7; }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; margin-top: 1rem; }
-  .chart-card { background: #140826; border: 1px solid #3b1f6e; border-radius: 16px; padding: 1.2rem; }
-  .chart-card h3 { color: #c084fc; text-align: center; margin-bottom: 0.8rem; font-size: 1.1rem; }
-  .chart-card canvas { max-height: 300px; width: 100% !important; }
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
-  .stat-box { background: #1a0a2e; border: 1px solid #3b1f6e; border-radius: 12px; padding: 1rem; text-align: center; }
-  .stat-box .num { font-size: 2rem; font-weight: 800; color: #f1c40f; display: block; }
-  .stat-box .label { font-size: 0.8rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
-  .live-badge { display: inline-block; background: #7c3aed; color: #fff; padding: 0.35rem 1rem; border-radius: 14px; font-size: 0.9rem; font-weight: 700; animation: pulse 1.5s infinite; }
+  .chart-card { background: #140826; border: 1px solid #3b1f6e; border-radius: 16px; padding: 1.2rem; box-shadow: 0 0 20px rgba(124,58,237,0.15); transition: box-shadow 0.3s; }
+  .chart-card:hover { box-shadow: 0 0 30px rgba(124,58,237,0.3); }
+  .chart-card h3 { color: #fff; text-align: center; margin-bottom: 0.8rem; font-size: 1.2rem; text-shadow: 0 0 10px currentColor; }
+  .chart-card canvas { max-height: 350px; width: 100% !important; }
+  .live-badge { display: inline-block; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; padding: 0.35rem 1rem; border-radius: 14px; font-size: 0.9rem; font-weight: 700; animation: pulse 1.5s infinite; box-shadow: 0 0 15px rgba(168,85,247,0.4); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
   .footer-info { text-align: center; padding: 1rem; color: #6b4b8a; font-size: 0.85rem; }
-  .debug-box { background: #1a0a0a; border: 1px solid #5c2020; color: #f87171; padding: 1rem; border-radius: 10px; margin: 1rem 0; display: none; font-size: 0.85rem; }
-  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 600px) { .charts-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -45,15 +40,6 @@
       <button class="grado-tab" data-grado="6°" onclick="selGrado('6°')">6° Grado</button>
     </div>
   </div>
-
-  <div class="stats-row">
-    <div class="stat-box"><span class="num" id="s-votos">0</span><div class="label">Votos Emitidos</div></div>
-    <div class="stat-box"><span class="num" id="s-estrellas">0</span><div class="label">Estrellas Totales</div></div>
-    <div class="stat-box"><span class="num" id="s-proyectos">0</span><div class="label">Proyectos</div></div>
-    <div class="stat-box"><span class="num" id="s-promedio">0.0</span><div class="label">Promedio x Voto</div></div>
-  </div>
-
-  <div id="debug" class="debug-box"></div>
 
   <div class="charts-grid">
     <div class="chart-card">
@@ -71,44 +57,31 @@
   </div>
 
   <div style="text-align:center;margin:1rem 0;padding:1rem;border-top:1px solid #3b1f6e;">
-    <button onclick="resetVotos()" style="background:#5c2020;color:#f87171;border:1px solid #f87171;padding:0.8rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">🗑️ REINICIAR VOTOS</button>
+    <button onclick="resetVotos()" class="reset-btn">🗑️ REINICIAR VOTOS</button>
   </div>
   <div class="footer-info">Los datos se actualizan automáticamente</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
+<style>
+.reset-btn { background:#5c2020; color:#f87171; border:1px solid #f87171; padding:0.8rem 2rem; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.reset-btn:hover { background:#7c2a2a; box-shadow:0 0 15px rgba(248,113,113,0.3); }
+</style>
 <script>
 // ===== CRECIMIENTO.JS =====
 let g = '5°', ch1 = null, ch2 = null, ch3 = null
 let ChartLib = typeof Chart !== 'undefined' ? Chart : null
 
-function dbg(msg) { const d = document.getElementById('debug'); if(d) { d.style.display='block'; d.innerHTML += '<div>'+msg+'</div>'; console.log(msg) } }
-
 async function loadData() {
-  dbg('Cargando datos...')
   try {
-    const { data: p, error: e2 } = await window._db.from('proyectos').select('*')
-    if (e2) { dbg('Error proyectos: '+e2.message); return }
-    dbg('Proyectos: '+ (p||[]).length + ' registros')
-    render(p||[])
-  } catch(e) { dbg('Error: '+e.message) }
+    const { data: p } = await window._db.from('proyectos').select('*')
+    if (p) render(p)
+  } catch(e) { console.error(e) }
 }
 
 function render(proyectos) {
   const filt = proyectos.filter(x => x.grado === g)
-
-  const tv = filt.reduce((s, x) => s + x.votos_ingenio + x.votos_estetica + x.votos_funcion, 0)
-  const te = filt.reduce((s, x) => s + x.ingenio + x.estetica + x.funcion, 0)
-  const pv = filt.filter(x => x.votos_ingenio + x.votos_estetica + x.votos_funcion > 0).length
-  const prom = tv > 0 ? (te/tv).toFixed(1) : '0.0'
-
-  document.getElementById('s-votos').textContent = tv
-  document.getElementById('s-estrellas').textContent = te
-  document.getElementById('s-proyectos').textContent = pv
-  document.getElementById('s-promedio').textContent = prom
-
-  if (!ChartLib) { dbg('Chart.js no disponible'); return }
-
+  if (!ChartLib) return
   grafica('c1', filt, 'ingenio', '💡', '#c084fc')
   grafica('c2', filt, 'estetica', '🎨', '#a78bfa')
   grafica('c3', filt, 'funcion', '⚙️', '#f1c40f')
@@ -125,45 +98,91 @@ function grafica(canvasId, datos, campo, icono, color) {
 
   if (valores.length === 0) { valores.push(0); labels.push('Sin datos') }
 
-  const grad = ctx.createLinearGradient(0, 0, 0, 300)
+  const grad = ctx.createLinearGradient(0, 0, 0, 350)
   grad.addColorStop(0, color)
-  grad.addColorStop(1, color + '44')
+  grad.addColorStop(1, color + '22')
+
+  const maxVal = Math.max(...valores, 1)
+  const step = maxVal <= 3 ? 1 : maxVal <= 10 ? 2 : 5
 
   const nueva = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
       datasets: [{
-        label: icono,
         data: valores,
         backgroundColor: grad,
         borderColor: color,
-        borderWidth: 1,
-        borderRadius: 4
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+        hoverBackgroundColor: color
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#1a0a2e',
+          titleColor: '#e2d9f3',
+          bodyColor: '#fff',
+          borderColor: color,
+          borderWidth: 2,
+          padding: 10,
           callbacks: {
-            label: ctx => ctx.parsed.y + ' estrellas'
+            label: ctx => '⭐ ' + ctx.parsed.y
           }
-        }
+        },
+        datalabels: { display: false }
       },
       scales: {
         x: {
-          ticks: { color: '#e2d9f3', font: { size: 10 }, maxRotation: 45 },
+          ticks: { color: '#e2d9f3', font: { size: 11, weight: 'bold' }, maxRotation: 50 },
           grid: { display: false }
         },
         y: {
           beginAtZero: true,
-          ticks: { color: '#9ca3af', stepSize: 1 },
-          grid: { color: '#3b1f6e' }
+          max: Math.ceil(maxVal / step) * step + step,
+          ticks: { color: 'rgba(226,217,243,0.6)', stepSize: step, font: { size: 10 } },
+          grid: { color: 'rgba(59,31,110,0.4)' }
         }
+      },
+      animation: { duration: 600, easing: 'easeOutQuart' }
+    },
+    plugins: [{
+      id: 'glow',
+      beforeDraw: (chart) => {
+        const ctx2 = chart.ctx
+        chart.data.datasets.forEach((ds, i) => {
+          const meta = chart.getDatasetMeta(i)
+          meta.data.forEach(bar => {
+            ctx2.save()
+            ctx2.shadowColor = color
+            ctx2.shadowBlur = 12
+            ctx2.restore()
+          })
+        })
+      },
+      afterDraw: (chart) => {
+        const ctx2 = chart.ctx
+        chart.data.datasets.forEach((ds, i) => {
+          const meta = chart.getDatasetMeta(i)
+          meta.data.forEach((bar, j) => {
+            const val = ds.data[j]
+            if (val > 0) {
+              ctx2.fillStyle = '#fff'
+              ctx2.font = 'bold 11px sans-serif'
+              ctx2.textAlign = 'center'
+              ctx2.shadowColor = color
+              ctx2.shadowBlur = 8
+              ctx2.fillText(val, bar.x, bar.y - 8)
+            }
+          })
+        })
       }
-    }
+    }]
   })
 
   if (canvasId === 'c1') ch1 = nueva
@@ -184,16 +203,14 @@ async function resetVotos() {
 }
 
 // Iniciar
-if (!window._db) { dbg('ERROR: Supabase no conectado') }
-if (!ChartLib) { dbg('Chart.js no se cargó - usando datos sin gráficas') }
-loadData()
+if (window._db && ChartLib) loadData()
 
 // Suscripcion en tiempo real
 try {
   window._db.channel('cambios-proyectos-growth')
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'proyectos' }, () => loadData())
     .subscribe()
-} catch(e) { dbg('Error suscripcion: '+e.message) }
+} catch(e) {}
 </script>
 </body>
 </html>
