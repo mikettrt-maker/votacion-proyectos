@@ -189,3 +189,21 @@ function suscribir() {
 }
 
 window.onload = () => { cargarDatos(); suscribir() }
+
+async function resetearTodo() {
+  if (!confirm('¿Reiniciar TODOS los votos a cero? Esta acción no se puede deshacer.')) return
+  if (!confirm('⚠️ ¿SEGURO? Se perderán todos los votos del historial y los totales.')) return
+
+  try {
+    await window._db.from('votos_historial').delete().neq('id', 0)
+    await window._db.from('proyectos').update({
+      ingenio: 0, estetica: 0, funcion: 0,
+      votos_ingenio: 0, votos_estetica: 0, votos_funcion: 0
+    }).neq('id', 'none')
+
+    alert('✅ Todos los votos han sido reiniciados.')
+    cargarDatos()
+  } catch (err) {
+    alert('Error: ' + err.message)
+  }
+}
