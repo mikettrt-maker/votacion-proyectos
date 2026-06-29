@@ -5,15 +5,27 @@ const CATEGORIAS = [
 ]
 
 const EMOJIS = {
+  '4a_camila': '🪙', '4a_dylan': '🔊', '4a_nicole': '🚦',
+  '4a_sofi': '🅿️', '4a_jade': '🏠', '4a_naty': '🏗️',
+  '4a_adonai': '🧠', '4a_santi': '🚙', '4a_ander': '🌤️',
+  '4a_ram': '📏', '4a_domi': '🔐',
   '5a_alex': '🤖', '5a_fer': '🚦', '5a_regis': '🚶',
   '5a_iker': '❓', '5a_said': '🔔', '5a_gael': '📡',
-  '5a_david': '🔒', '5a_trinidad': '🏗️'
+  '5a_david': '🔒', '5a_trinidad': '🏗️',
+  '6a_maria': '🏡', '6a_yair': '📐', '6a_karen': '🎮',
+  '6a_cesar': '🛡️', '6a_mia': '🏗️', '6a_nico': '🚪',
+  '6a_pepe': '💧', '6a_randy': '🚧', '6a_aline': '🚘',
+  '6a_fer': '🃏', '6a_daman': '🔑', '6a_owen': '🎯',
+  '6a_lalito': '💡'
 }
+
+const GRADOS = ['4°', '5°', '6°']
 
 let proyectos = []
 let hijoSeleccionado = null
 let calificaciones = {}
 let proyectosVotados = {}
+let proyectosMismoGrado = []
 
 function $(id) { return document.getElementById(id) }
 
@@ -38,7 +50,7 @@ async function cargarProyectos() {
     .select('*')
     .order('nombre', { ascending: true })
   if (error) { console.error('Error cargando proyectos:', error); return }
-  proyectos = data
+  proyectos = data || []
 }
 
 function mostrarPantalla(id) {
@@ -50,17 +62,28 @@ function mostrarPantalla(id) {
 function renderizarEstudiantes() {
   const grid = $('student-grid')
   grid.innerHTML = ''
-  proyectos.forEach(p => {
-    const card = document.createElement('div')
-    card.className = 'student-card'
-    if (hijoSeleccionado === p.id) card.classList.add('selected')
-    card.innerHTML = `
-      <span class="emoji">${EMOJIS[p.id] || '📚'}</span>
-      <div class="sname">${p.nombre}</div>
-      <div class="sproject">${p.proyecto}</div>
-    `
-    card.onclick = () => seleccionarHijo(p.id)
-    grid.appendChild(card)
+
+  GRADOS.forEach(grado => {
+    const alumnos = proyectos.filter(p => p.grado === grado)
+    if (alumnos.length === 0) return
+
+    const header = document.createElement('div')
+    header.className = 'grado-header'
+    header.textContent = `${grado} Grado`
+    grid.appendChild(header)
+
+    alumnos.forEach(p => {
+      const card = document.createElement('div')
+      card.className = 'student-card'
+      if (hijoSeleccionado === p.id) card.classList.add('selected')
+      card.innerHTML = `
+        <span class="emoji">${EMOJIS[p.id] || '📚'}</span>
+        <div class="sname">${p.nombre}</div>
+        <div class="sproject">${p.proyecto}</div>
+      `
+      card.onclick = () => seleccionarHijo(p.id)
+      grid.appendChild(card)
+    })
   })
 }
 
@@ -75,7 +98,10 @@ function seleccionarHijo(id) {
 
 function continuarAVotar() {
   if (!hijoSeleccionado) return
-  $('hijo-name-display').textContent = proyectos.find(p => p.id === hijoSeleccionado).nombre
+  const hijo = proyectos.find(p => p.id === hijoSeleccionado)
+  $('hijo-name-display').textContent = hijo.nombre
+  $('hijo-grado-display').textContent = hijo.grado
+  proyectosMismoGrado = proyectos.filter(p => p.grado === hijo.grado)
   renderizarProyectos()
   actualizarContador()
   mostrarPantalla('screen-vote')
@@ -86,7 +112,8 @@ function renderizarProyectos() {
   const container = $('project-list')
   container.innerHTML = ''
   calificaciones = {}
-  proyectos.forEach(p => {
+
+  proyectosMismoGrado.forEach(p => {
     const esPropio = p.id === hijoSeleccionado
     const yaVotado = proyectosVotados[p.id]
     calificaciones[p.id] = { ingenio: 0, estetica: 0, funcion: 0 }
@@ -96,24 +123,21 @@ function renderizarProyectos() {
     card.id = 'card-' + p.id
 
     let html = `<div class="project-title">${esPropio ? '🔒 ' : ''}${p.proyecto}</div>
-                <div class="project-author">${p.nombre} — ${p.grado}</div>`
+                <div class="project-author">${p.nombre}</div>`
 
     if (esPropio) {
       html += `<div class="lock-badge">🔒 Este es el proyecto de tu hijo — No puedes votar aquí</div>`
-    }
-
-    if (esPropio) {
       CATEGORIAS.forEach(cat => {
         html += `<div class="category-row">
           <span class="category-label"><span class="cat-icon">${cat.icon}</span>${cat.label}</span>
-          <span style="color:#999;font-size:0.85rem;">——</span>
+          <span class="no-vote">——</span>
         </div>`
       })
     } else if (yaVotado) {
       CATEGORIAS.forEach(cat => {
         html += `<div class="category-row">
           <span class="category-label"><span class="cat-icon">${cat.icon}</span>${cat.label}</span>
-          <span style="color:#27ae60;font-weight:600;font-size:0.85rem;">✅ Votado</span>
+          <span class="votado-badge">✅ Votado</span>
         </div>`
       })
     } else {
@@ -158,11 +182,12 @@ function setStars(container, value) {
 }
 
 function actualizarContador() {
+  const total = proyectosMismoGrado.length - 1
   let count = 0
-  Object.values(calificaciones).forEach(c => {
-    if (c.ingenio > 0 && c.estetica > 0 && c.funcion > 0) count++
+  Object.entries(calificaciones).forEach(([id, c]) => {
+    if (id !== hijoSeleccionado && c.ingenio > 0 && c.estetica > 0 && c.funcion > 0) count++
   })
-  $('votos-contador').textContent = `Votados: ${count}/7`
+  $('votos-contador').textContent = `Votados: ${count}/${total}`
 }
 
 function cambiarHijo() {

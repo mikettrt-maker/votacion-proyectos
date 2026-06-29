@@ -5,6 +5,7 @@ const CATEGORIAS = [
 ]
 
 let proyectos = []
+let gradoSeleccionado = '5°'
 
 async function cargarResultados() {
   const { data, error } = await window._db
@@ -14,7 +15,7 @@ async function cargarResultados() {
     .order('nombre', { ascending: true })
 
   if (error) { console.error(error); return }
-  proyectos = data
+  proyectos = data || []
   renderizar()
 }
 
@@ -23,12 +24,23 @@ function calcularPromedio(votos, total) {
   return (votos / total).toFixed(1)
 }
 
+function seleccionarGrado(grado) {
+  gradoSeleccionado = grado
+  document.querySelectorAll('.grado-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.grado === grado)
+  })
+  renderizar()
+}
+
 function renderizar() {
+  const filtrados = proyectos.filter(p => p.grado === gradoSeleccionado)
+  document.getElementById('grado-titulo').textContent = gradoSeleccionado + ' Grado'
+
   const grid = document.getElementById('categorias-grid')
   grid.innerHTML = ''
 
   CATEGORIAS.forEach(cat => {
-    const sorted = [...proyectos]
+    const sorted = [...filtrados]
       .map(p => ({
         ...p,
         avg: calcularPromedio(p[cat.id], p['votos_' + cat.id]),
@@ -43,12 +55,12 @@ function renderizar() {
     let html = `<h3><span class="cat-icon">${cat.icon}</span>${cat.label}</h3>`
 
     if (sorted.length === 0) {
-      html += `<p style="text-align:center;color:#8b949e;font-size:0.9rem;">Sin votos aún</p>`
+      html += `<div class="sin-votos">Sin votos aún</div>`
     } else {
       sorted.slice(0, 5).forEach((p, i) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : ''
         html += `<div class="top-item">
-          <div class="medal">${medal || (i+1)}</div>
+          <div class="medal">${medal || (i + 1)}</div>
           <div class="info">
             <div class="name">${p.nombre}</div>
             <div class="project">${p.proyecto}</div>
@@ -62,15 +74,15 @@ function renderizar() {
     grid.appendChild(card)
   })
 
-  renderizarRankingCompleto()
+  renderizarRankingCompleto(filtrados)
 }
 
-function renderizarRankingCompleto() {
+function renderizarRankingCompleto(filtrados) {
   const container = document.getElementById('ranking-completo')
   container.innerHTML = ''
 
   CATEGORIAS.forEach(cat => {
-    const sorted = [...proyectos]
+    const sorted = [...filtrados]
       .map(p => ({
         ...p,
         avg: calcularPromedio(p[cat.id], p['votos_' + cat.id]),
@@ -85,8 +97,8 @@ function renderizarRankingCompleto() {
     sorted.forEach((p, i) => {
       const avg = p.votosRecibidos > 0 ? p.avg : '—'
       html += `<div class="ranking-item">
-        <span class="pos">${i+1}</span>
-        <span class="rname">${p.nombre} — ${p.proyecto.substring(0, 20)}</span>
+        <span class="pos">${i + 1}</span>
+        <span class="rname">${p.nombre} — ${p.proyecto.substring(0, 22)}</span>
         <span class="ravg">${avg !== '—' ? '⭐ ' + avg : avg}</span>
       </div>`
     })

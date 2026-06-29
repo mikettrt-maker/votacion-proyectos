@@ -8,18 +8,21 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="stylesheet" href="estilos.css?v=2">
-<style>
-  .footer-info { text-align: center; padding: 1rem; color: #6b4b8a; font-size: 0.75rem; margin-top: 1rem; }
-  #ultima-actualizacion { color: #9ca3af; }
-</style>
 </head>
 <body class="resultados-body">
 <div class="resultados-container">
   <div class="resultados-header">
     <h1>🏆 RESULTADOS EN VIVO</h1>
     <div><span class="live-badge">🔴 EN VIVO</span></div>
-    <p>5° Grado — Actualizado: <span id="ultima-actualizacion">—</span></p>
+    <p><span id="grado-titulo">5° Grado</span> — Última actualización: <span id="ultima-actualizacion">—</span></p>
   </div>
+
+  <div class="grado-tabs">
+    <button class="grado-tab" data-grado="4°" onclick="seleccionarGrado('4°')">4° Grado</button>
+    <button class="grado-tab active" data-grado="5°" onclick="seleccionarGrado('5°')">5° Grado</button>
+    <button class="grado-tab" data-grado="6°" onclick="seleccionarGrado('6°')">6° Grado</button>
+  </div>
+
   <div id="categorias-grid"></div>
   <div id="ranking-completo"></div>
   <div class="footer-info">
