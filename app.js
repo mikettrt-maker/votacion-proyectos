@@ -19,29 +19,27 @@ const EMOJIS = {
   '6a_lalito': '💡'
 }
 
-const GRADOS = ['4°', '5°', '6°']
-
 let proyectos = []
+let gradoSeleccionado = null
 let hijoSeleccionado = null
 let calificaciones = {}
 let proyectosVotados = {}
-let proyectosMismoGrado = []
+
+const PRESUPUESTO_POR_PROYECTO = 5
 
 function $(id) { return document.getElementById(id) }
 
 async function init() {
   cargarEstadoLocal()
   await cargarProyectos()
-  mostrarPantalla('screen-select')
+  mostrarPantalla('screen-grade')
 }
 
 function cargarEstadoLocal() {
   const saved = localStorage.getItem('hijoSeleccionado')
-  if (saved) {
-    hijoSeleccionado = saved
-    const votados = localStorage.getItem('votados_' + hijoSeleccionado)
-    if (votados) proyectosVotados = JSON.parse(votados)
-  }
+  if (saved) hijoSeleccionado = saved
+  const savedGrado = localStorage.getItem('gradoSeleccionado')
+  if (savedGrado) gradoSeleccionado = savedGrado
 }
 
 async function cargarProyectos() {
@@ -49,7 +47,7 @@ async function cargarProyectos() {
     .from('proyectos')
     .select('*')
     .order('nombre', { ascending: true })
-  if (error) { console.error('Error cargando proyectos:', error); return }
+  if (error) { console.error('Error:', error); return }
   proyectos = data || []
 }
 
@@ -58,62 +56,61 @@ function mostrarPantalla(id) {
   $(id).classList.add('active')
 }
 
-/* === PANTALLA 1: ELEGIR HIJO === */
+/* ========== PANTALLA 1: GRADO ========== */
+function seleccionarGrado(grado) {
+  gradoSeleccionado = grado
+  localStorage.setItem('gradoSeleccionado', grado)
+  renderizarEstudiantes()
+  $('screen-grade-titulo').textContent = grado + ' Grado'
+  mostrarPantalla('screen-child')
+}
+
+/* ========== PANTALLA 2: HIJO ========== */
 function renderizarEstudiantes() {
   const grid = $('student-grid')
   grid.innerHTML = ''
 
-  GRADOS.forEach(grado => {
-    const alumnos = proyectos.filter(p => p.grado === grado)
-    if (alumnos.length === 0) return
-
-    const header = document.createElement('div')
-    header.className = 'grado-header'
-    header.textContent = `${grado} Grado`
-    grid.appendChild(header)
-
-    alumnos.forEach(p => {
-      const card = document.createElement('div')
-      card.className = 'student-card'
-      if (hijoSeleccionado === p.id) card.classList.add('selected')
-      card.innerHTML = `
-        <span class="emoji">${EMOJIS[p.id] || '📚'}</span>
-        <div class="sname">${p.nombre}</div>
-        <div class="sproject">${p.proyecto}</div>
-      `
-      card.onclick = () => seleccionarHijo(p.id)
-      grid.appendChild(card)
-    })
+  const alumnos = proyectos.filter(p => p.grado === gradoSeleccionado)
+  alumnos.forEach(p => {
+    const card = document.createElement('div')
+    card.className = 'student-card'
+    if (hijoSeleccionado === p.id && gradoSeleccionado === p.grado) card.classList.add('selected')
+    card.innerHTML = `
+      <span class="emoji">${EMOJIS[p.id] || '📚'}</span>
+      <div class="sname">${p.nombre}</div>
+      <div class="sproject">${p.proyecto}</div>
+    `
+    card.onclick = () => {
+      hijoSeleccionado = p.id
+      localStorage.setItem('hijoSeleccionado', p.id)
+      const votados = localStorage.getItem('votados_' + p.id)
+      proyectosVotados = votados ? JSON.parse(votados) : {}
+      renderizarEstudiantes()
+      $('btn-votar').disabled = false
+    }
+    grid.appendChild(card)
   })
 }
 
-function seleccionarHijo(id) {
-  hijoSeleccionado = id
-  localStorage.setItem('hijoSeleccionado', id)
-  const votados = localStorage.getItem('votados_' + id)
-  proyectosVotados = votados ? JSON.parse(votados) : {}
-  renderizarEstudiantes()
-  $('btn-continuar').disabled = false
-}
-
-function continuarAVotar() {
+function irAVotar() {
   if (!hijoSeleccionado) return
   const hijo = proyectos.find(p => p.id === hijoSeleccionado)
-  $('hijo-name-display').textContent = hijo.nombre
-  $('hijo-grado-display').textContent = hijo.grado
-  proyectosMismoGrado = proyectos.filter(p => p.grado === hijo.grado)
-  renderizarProyectos()
-  actualizarContador()
+  $('votando-nombre').textContent = hijo.nombre
+  $('votando-grado').textContent = hijo.grado
+  renderizarVotacion()
   mostrarPantalla('screen-vote')
 }
 
-/* === PANTALLA 2: VOTAR === */
-function renderizarProyectos() {
+/* ========== PANTALLA 3: VOTAR ========== */
+function renderizarVotacion() {
   const container = $('project-list')
   container.innerHTML = ''
   calificaciones = {}
 
-  proyectosMismoGrado.forEach(p => {
+  const mismoGrado = proyectos.filter(p => p.grado === gradoSeleccionado)
+  const presupuestoMax = (mismoGrado.length - 1) * PRESUPUESTO_POR_PROYECTO
+
+  mismoGrado.forEach(p => {
     const esPropio = p.id === hijoSeleccionado
     const yaVotado = proyectosVotados[p.id]
     calificaciones[p.id] = { ingenio: 0, estetica: 0, funcion: 0 }
@@ -126,7 +123,7 @@ function renderizarProyectos() {
                 <div class="project-author">${p.nombre}</div>`
 
     if (esPropio) {
-      html += `<div class="lock-badge">🔒 Este es el proyecto de tu hijo — No puedes votar aquí</div>`
+      html += `<div class="lock-badge">🔒 Este es tu hijo — No puedes votar aquí</div>`
       CATEGORIAS.forEach(cat => {
         html += `<div class="category-row">
           <span class="category-label"><span class="cat-icon">${cat.icon}</span>${cat.label}</span>
@@ -165,12 +162,29 @@ function renderizarProyectos() {
     el.querySelectorAll('.star').forEach(s => {
       s.addEventListener('click', function () {
         const value = parseInt(this.dataset.value)
+        const actual = calificaciones[projectId][category]
+        const cambio = value - actual
+
+        if (cambio <= 0) {
+          setStars(el, value)
+          calificaciones[projectId][category] = value
+          actualizarContadores(presupuestoMax)
+          return
+        }
+
+        if (cambio > 0 && estrellasUsadas() + cambio > presupuestoMax) {
+          mostrarToast(`⚠️ Límite: ${presupuestoMax} ⭐ en total. Distribuye mejor.`)
+          return
+        }
+
         setStars(el, value)
         calificaciones[projectId][category] = value
-        actualizarContador()
+        actualizarContadores(presupuestoMax)
       })
     })
   })
+
+  actualizarContadores(presupuestoMax)
 }
 
 function setStars(container, value) {
@@ -181,36 +195,47 @@ function setStars(container, value) {
   })
 }
 
-function actualizarContador() {
-  const total = proyectosMismoGrado.length - 1
-  let count = 0
-  Object.entries(calificaciones).forEach(([id, c]) => {
-    if (id !== hijoSeleccionado && c.ingenio > 0 && c.estetica > 0 && c.funcion > 0) count++
+function estrellasUsadas() {
+  let total = 0
+  Object.values(calificaciones).forEach(c => {
+    total += (c.ingenio || 0) + (c.estetica || 0) + (c.funcion || 0)
   })
-  $('votos-contador').textContent = `Votados: ${count}/${total}`
+  return total
 }
 
-function cambiarHijo() {
-  hijoSeleccionado = null
-  localStorage.removeItem('hijoSeleccionado')
-  proyectosVotados = {}
-  $('btn-continuar').disabled = true
-  renderizarEstudiantes()
-  mostrarPantalla('screen-select')
+function actualizarContadores(presupuestoMax) {
+  const usadas = estrellasUsadas()
+  const disponibles = presupuestoMax - usadas
+  $('estrellas-usadas').textContent = usadas
+  $('estrellas-total').textContent = presupuestoMax
+  $('estrellas-restantes').textContent = disponibles
+
+  const mismogrado = proyectos.filter(p => p.grado === gradoSeleccionado)
+  const total = mismogrado.length - 1
+  let completos = 0
+  Object.entries(calificaciones).forEach(([id, c]) => {
+    if (id !== hijoSeleccionado && c.ingenio > 0 && c.estetica > 0 && c.funcion > 0) completos++
+  })
+  $('votos-contador').textContent = completos + '/' + total
+}
+
+function mostrarToast(msg) {
+  const t = $('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 3000)
 }
 
 async function enviarVotos() {
   const votosAEnviar = []
   Object.entries(calificaciones).forEach(([id, cats]) => {
     if (cats.ingenio > 0 && cats.estetica > 0 && cats.funcion > 0) {
-      if (!proyectosVotados[id]) {
-        votosAEnviar.push({ id, ...cats })
-      }
+      if (!proyectosVotados[id]) votosAEnviar.push({ id, ...cats })
     }
   })
 
   if (votosAEnviar.length === 0) {
-    alert('Selecciona al menos un proyecto completo (las 3 categorías) para votar.')
+    alert('Completa al menos un proyecto (las 3 categorías) para votar.')
     return
   }
 
@@ -231,18 +256,27 @@ async function enviarVotos() {
     localStorage.setItem('votados_' + hijoSeleccionado, JSON.stringify(proyectosVotados))
     mostrarPantalla('screen-confirm')
   } catch (err) {
-    console.error('Error al enviar votos:', err)
-    alert('Ocurrió un error al enviar los votos. Intenta de nuevo.')
+    console.error(err)
+    alert('Error al enviar. Intenta de nuevo.')
     $('btn-enviar').disabled = false
     $('btn-enviar').textContent = '💾 Enviar votos'
   }
 }
 
-function volverInicio() {
+function cambiarHijo() {
   hijoSeleccionado = null
   localStorage.removeItem('hijoSeleccionado')
   proyectosVotados = {}
-  $('btn-continuar').disabled = true
   renderizarEstudiantes()
-  mostrarPantalla('screen-select')
+  $('btn-votar').disabled = true
+  mostrarPantalla('screen-child')
+}
+
+function volverInicio() {
+  hijoSeleccionado = null
+  gradoSeleccionado = null
+  localStorage.removeItem('hijoSeleccionado')
+  localStorage.removeItem('gradoSeleccionado')
+  proyectosVotados = {}
+  mostrarPantalla('screen-grade')
 }

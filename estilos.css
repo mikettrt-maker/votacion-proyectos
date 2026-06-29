@@ -15,6 +15,28 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
 .screen { display: none; padding: 1.2rem; max-width: 900px; margin: 0 auto; }
 .screen.active { display: block; }
 
+/* === GRADE SELECT SCREEN === */
+.grade-select-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.grade-btn {
+  background: #1a0a2e;
+  border: 2px solid #3b1f6e;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e2d9f3;
+}
+.grade-btn:hover { border-color: #a855f7; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(168,85,247,0.25); }
+.grade-btn .grade-num { font-size: 3rem; font-weight: 800; color: #c084fc; display: block; }
+
 /* === SELECT CHILD SCREEN === */
 .select-child-header { text-align: center; margin-bottom: 2rem; }
 .select-child-header h1 { color: #c084fc; font-size: 2rem; }
@@ -109,6 +131,20 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
   transition: all 0.2s;
 }
 .btn-cambiar:hover { background: #2d1054; }
+.btn-cambiar-hijo {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  background: transparent;
+  border: 1px solid #3b1f6e;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cambiar-hijo:hover { border-color: #a855f7; color: #c084fc; }
 
 .project-card {
   background: #1a0a2e;
@@ -187,6 +223,41 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
 
 .project-card.locked .stars-container { cursor: not-allowed; }
 .project-card.locked .star { color: #4a3080 !important; }
+
+/* === PRESUPUESTO BAR === */
+.presupuesto-bar {
+  background: #2d1054;
+  border: 1px solid #6d28d9;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #c084fc;
+  margin-bottom: 1rem;
+}
+.presupuesto-bar span { color: #f1c40f; font-size: 1.2rem; }
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #2d1010;
+  color: #f87171;
+  border: 1px solid #5c2020;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.4s;
+  max-width: 90%;
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* === CONFIRM SCREEN === */
 .confirm-content {
