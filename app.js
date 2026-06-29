@@ -43,12 +43,17 @@ function cargarEstadoLocal() {
 }
 
 async function cargarProyectos() {
-  const { data, error } = await window._db
-    .from('proyectos')
-    .select('*')
-    .order('nombre', { ascending: true })
-  if (error) { console.error('Error:', error); return }
-  proyectos = data || []
+  try {
+    const { data, error } = await window._db
+      .from('proyectos')
+      .select('*')
+      .order('nombre', { ascending: true })
+    if (error) { console.error('Error Supabase:', error); return }
+    proyectos = data || []
+    console.log('Proyectos cargados:', proyectos.length)
+  } catch (e) {
+    console.error('Error cargando proyectos:', e)
+  }
 }
 
 function mostrarPantalla(id) {
@@ -71,6 +76,10 @@ function renderizarEstudiantes() {
   grid.innerHTML = ''
 
   const alumnos = proyectos.filter(p => p.grado === gradoSeleccionado)
+  if (alumnos.length === 0) {
+    grid.innerHTML = '<div class="no-alumnos">No hay alumnos registrados para este grado.<br>Verifica que los datos estén en Supabase.</div>'
+    return
+  }
   alumnos.forEach(p => {
     const card = document.createElement('div')
     card.className = 'student-card'

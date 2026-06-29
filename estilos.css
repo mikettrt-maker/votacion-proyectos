@@ -96,7 +96,7 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
   background: #1a0a2e;
   padding: 1rem 1.2rem;
   border-radius: 14px;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0;
   box-shadow: 0 2px 12px rgba(0,0,0,0.3);
   display: flex;
   justify-content: space-between;
@@ -145,6 +145,7 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
   transition: all 0.2s;
 }
 .btn-cambiar-hijo:hover { border-color: #a855f7; color: #c084fc; }
+.no-alumnos { text-align: center; padding: 3rem 1rem; color: #f87171; font-size: 1.1rem; grid-column: 1 / -1; background: #1f0a0a; border: 1px solid #5c2020; border-radius: 12px; }
 
 .project-card {
   background: #1a0a2e;
@@ -226,6 +227,9 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
 
 /* === PRESUPUESTO BAR === */
 .presupuesto-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: #2d1054;
   border: 1px solid #6d28d9;
   border-radius: 10px;
@@ -235,6 +239,7 @@ h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
   font-weight: 600;
   color: #c084fc;
   margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .presupuesto-bar span { color: #f1c40f; font-size: 1.2rem; }
 
