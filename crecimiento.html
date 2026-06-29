@@ -18,9 +18,8 @@
   .growth-header .grado-tab { background: #1a0a2e; border: 2px solid #3b1f6e; color: #9ca3af; padding: 0.5rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
   .growth-header .grado-tab.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
   .growth-header .grado-tab:hover { border-color: #a855f7; }
-  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1rem; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; margin-top: 1rem; }
   .chart-card { background: #140826; border: 1px solid #3b1f6e; border-radius: 16px; padding: 1.2rem; }
-  .chart-card.full { grid-column: 1 / -1; }
   .chart-card h3 { color: #c084fc; text-align: center; margin-bottom: 0.8rem; font-size: 1.1rem; }
   .chart-card canvas { max-height: 300px; width: 100% !important; }
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
@@ -31,7 +30,8 @@
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
   .footer-info { text-align: center; padding: 1rem; color: #6b4b8a; font-size: 0.85rem; }
   .debug-box { background: #1a0a0a; border: 1px solid #5c2020; color: #f87171; padding: 1rem; border-radius: 10px; margin: 1rem 0; display: none; font-size: 0.85rem; }
-  @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .charts-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -56,16 +56,16 @@
   <div id="debug" class="debug-box"></div>
 
   <div class="charts-grid">
-    <div class="chart-card full">
-      <h3>⭐ Crecimiento de Estrellas por Categoría</h3>
+    <div class="chart-card">
+      <h3>💡 Ingenioso</h3>
       <canvas id="c1"></canvas>
     </div>
     <div class="chart-card">
-      <h3>📊 Votos Acumulados</h3>
+      <h3>🎨 Estética</h3>
       <canvas id="c2"></canvas>
     </div>
     <div class="chart-card">
-      <h3>🏆 Top 5 Proyectos</h3>
+      <h3>⚙️ Funcionamiento</h3>
       <canvas id="c3"></canvas>
     </div>
   </div>
@@ -87,25 +87,19 @@ function dbg(msg) { const d = document.getElementById('debug'); if(d) { d.style.
 async function loadData() {
   dbg('Cargando datos...')
   try {
-    const { data: h, error: e1 } = await window._db.from('votos_historial').select('*').order('timestamp', { ascending: true })
-    if (e1) { dbg('Error historial: '+e1.message); return }
-    dbg('Historial: '+ (h||[]).length + ' registros')
-
     const { data: p, error: e2 } = await window._db.from('proyectos').select('*')
     if (e2) { dbg('Error proyectos: '+e2.message); return }
     dbg('Proyectos: '+ (p||[]).length + ' registros')
-
-    render(h||[], p||[])
+    render(p||[])
   } catch(e) { dbg('Error: '+e.message) }
 }
 
-function render(historial, proyectos) {
-  const ids = proyectos.filter(x => x.grado === g).map(x => x.id)
-  const filt = historial.filter(x => ids.includes(x.proyecto_id))
+function render(proyectos) {
+  const filt = proyectos.filter(x => x.grado === g)
 
-  const tv = filt.length
+  const tv = filt.reduce((s, x) => s + x.votos_ingenio + x.votos_estetica + x.votos_funcion, 0)
   const te = filt.reduce((s, x) => s + x.ingenio + x.estetica + x.funcion, 0)
-  const pv = new Set(filt.map(x => x.proyecto_id)).size
+  const pv = filt.filter(x => x.votos_ingenio + x.votos_estetica + x.votos_funcion > 0).length
   const prom = tv > 0 ? (te/tv).toFixed(1) : '0.0'
 
   document.getElementById('s-votos').textContent = tv
@@ -113,83 +107,68 @@ function render(historial, proyectos) {
   document.getElementById('s-proyectos').textContent = pv
   document.getElementById('s-promedio').textContent = prom
 
-  if (!ChartLib) { dbg('Chart.js no disponible - mostrando datos en texto'); return }
+  if (!ChartLib) { dbg('Chart.js no disponible'); return }
 
-  grafica1(filt)
-  grafica2(filt)
-  grafica3(filt, proyectos)
+  grafica('c1', filt, 'ingenio', '💡', '#c084fc')
+  grafica('c2', filt, 'estetica', '🎨', '#a78bfa')
+  grafica('c3', filt, 'funcion', '⚙️', '#f1c40f')
 }
 
-function grafica1(datos) {
-  const ctx = document.getElementById('c1').getContext('2d')
-  if (ch1) ch1.destroy()
-  if (datos.length === 0) { ch1 = new Chart(ctx, { type:'line', data:{ labels:['Sin datos'], datasets:[{label:'💡',data:[0],borderColor:'#c084fc'}] }, options:{ responsive:true, plugins:{legend:{labels:{color:'#e2d9f3'}}}, scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#3b1f6e'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#3b1f6e'}}} } }); return }
+function grafica(canvasId, datos, campo, icono, color) {
+  const ctx = document.getElementById(canvasId).getContext('2d')
+  let ch = canvasId === 'c1' ? ch1 : canvasId === 'c2' ? ch2 : ch3
+  if (ch) ch.destroy()
 
-  const agru = {}
-  datos.forEach(x => {
-    const k = new Date(x.timestamp).toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
-    if (!agru[k]) agru[k] = { a:0, b:0, c:0 }
-    agru[k].a += x.ingenio; agru[k].b += x.estetica; agru[k].c += x.funcion
-  })
-  const lbl = Object.keys(agru), va = Object.values(agru)
-  let ca=0,cb=0,cc=0
-  ch1 = new Chart(ctx, {
-    type:'line',
+  const ordenados = [...datos].sort((a, b) => b[campo] - a[campo])
+  const labels = ordenados.map(x => x.nombre)
+  const valores = ordenados.map(x => x[campo])
+
+  if (valores.length === 0) { valores.push(0); labels.push('Sin datos') }
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 300)
+  grad.addColorStop(0, color)
+  grad.addColorStop(1, color + '44')
+
+  const nueva = new Chart(ctx, {
+    type: 'bar',
     data: {
-      labels: lbl,
-      datasets: [
-        { label:'💡 Ingenioso', data:va.map(v=>ca+=v.a), borderColor:'#c084fc', backgroundColor:'rgba(192,132,252,0.1)', fill:true, tension:0.3, pointRadius:3 },
-        { label:'🎨 Estética', data:va.map(v=>cb+=v.b), borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,0.1)', fill:true, tension:0.3, pointRadius:3 },
-        { label:'⚙️ Funcionamiento', data:va.map(v=>cc+=v.c), borderColor:'#f1c40f', backgroundColor:'rgba(241,196,15,0.1)', fill:true, tension:0.3, pointRadius:3 }
-      ]
+      labels,
+      datasets: [{
+        label: icono,
+        data: valores,
+        backgroundColor: grad,
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 4
+      }]
     },
-    options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e2d9f3', font:{ size:13 } } } }, scales:{ x:{ ticks:{ color:'#9ca3af', maxRotation:45 }, grid:{ color:'#3b1f6e' } }, y:{ beginAtZero:true, ticks:{ color:'#9ca3af' }, grid:{ color:'#3b1f6e' } } } }
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.y + ' estrellas'
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#e2d9f3', font: { size: 10 }, maxRotation: 45 },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#9ca3af', stepSize: 1 },
+          grid: { color: '#3b1f6e' }
+        }
+      }
+    }
   })
-}
 
-function grafica2(datos) {
-  const ctx = document.getElementById('c2').getContext('2d')
-  if (ch2) ch2.destroy()
-  if (datos.length === 0) { ch2 = new Chart(ctx, { type:'line', data:{ labels:['Sin datos'], datasets:[{label:'Votos',data:[0],borderColor:'#a78bfa'}] }, options:{ responsive:true, plugins:{legend:{labels:{color:'#e2d9f3'}}}, scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#3b1f6e'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#3b1f6e'}}} } }); return }
-
-  const agru = {}
-  datos.forEach(x => {
-    const k = new Date(x.timestamp).toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' })
-    if (!agru[k]) agru[k] = 0
-    agru[k]++
-  })
-  const lbl = Object.keys(agru), vals = Object.values(agru)
-  let ac=0
-  ch2 = new Chart(ctx, {
-    type:'line',
-    data: { labels:lbl, datasets:[{ label:'Votos acumulados', data:vals.map(v=>ac+=v), borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,0.15)', fill:true, tension:0.3, pointRadius:3 }] },
-    options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e2d9f3', font:{ size:12 } } } }, scales:{ x:{ ticks:{ color:'#9ca3af', maxRotation:45 }, grid:{ color:'#3b1f6e' } }, y:{ beginAtZero:true, ticks:{ color:'#9ca3af' }, grid:{ color:'#3b1f6e' } } } }
-  })
-}
-
-function grafica3(datos, proyectos) {
-  const ctx = document.getElementById('c3').getContext('2d')
-  if (ch3) ch3.destroy()
-  if (datos.length === 0) { ch3 = new Chart(ctx, { type:'bar', data:{ labels:['Sin datos'], datasets:[{label:'Promedio',data:[0],backgroundColor:'#4a1d8a'}] }, options:{ responsive:true, indexAxis:'y', plugins:{legend:{labels:{color:'#e2d9f3'}}}, scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#3b1f6e'}},y:{ticks:{color:'#e2d9f3'},grid:{display:false}}} } }); return }
-
-  const mapa = {}
-  datos.forEach(x => {
-    if (!mapa[x.proyecto_id]) mapa[x.proyecto_id] = { a:0, b:0, c:0, n:0 }
-    mapa[x.proyecto_id].a += x.ingenio; mapa[x.proyecto_id].b += x.estetica; mapa[x.proyecto_id].c += x.funcion; mapa[x.proyecto_id].n++
-  })
-  const rank = Object.entries(mapa).map(([id,v]) => {
-    const tot = v.a+v.b+v.c
-    const avg = v.n > 0 ? (tot/(v.n*3)*5) : 0
-    const pj = proyectos.find(x => x.id === id)
-    return { nombre: pj ? pj.nombre : id, avg: Math.round(avg*10)/10 }
-  }).sort((a,b) => b.avg - a.avg).slice(0,5)
-
-  const colores = ['#c084fc','#a78bfa','#7c3aed','#6d28d9','#4a1d8a']
-  ch3 = new Chart(ctx, {
-    type:'bar',
-    data: { labels:rank.map(r=>r.nombre), datasets:[{ label:'⭐/5', data:rank.map(r=>r.avg), backgroundColor:colores.slice(0,rank.length), borderRadius:6 }] },
-    options: { responsive:true, indexAxis:'y', plugins:{ legend:{ labels:{ color:'#e2d9f3', font:{ size:12 } } } }, scales:{ x:{ beginAtZero:true, max:5, ticks:{ color:'#9ca3af' }, grid:{ color:'#3b1f6e' } }, y:{ ticks:{ color:'#e2d9f3', font:{ size:12 } }, grid:{ display:false } } } }
-  })
+  if (canvasId === 'c1') ch1 = nueva
+  else if (canvasId === 'c2') ch2 = nueva
+  else ch3 = nueva
 }
 
 function selGrado(grado) { g = grado; document.querySelectorAll('.grado-tab').forEach(t => t.classList.toggle('active', t.dataset.grado === g)); loadData() }
@@ -198,7 +177,6 @@ async function resetVotos() {
   if (!confirm('¿Reiniciar TODOS los votos?')) return
   if (!confirm('¿SEGURO?')) return
   try {
-    await window._db.from('votos_historial').delete().neq('id', 0)
     await window._db.from('proyectos').update({ ingenio:0, estetica:0, funcion:0, votos_ingenio:0, votos_estetica:0, votos_funcion:0 }).neq('id', 'none')
     alert('✅ Reiniciado')
     loadData()
@@ -212,8 +190,8 @@ loadData()
 
 // Suscripcion en tiempo real
 try {
-  window._db.channel('cambios-historial')
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'votos_historial' }, () => loadData())
+  window._db.channel('cambios-proyectos-growth')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'proyectos' }, () => loadData())
     .subscribe()
 } catch(e) { dbg('Error suscripcion: '+e.message) }
 </script>

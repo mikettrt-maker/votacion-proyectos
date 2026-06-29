@@ -235,6 +235,13 @@ function mostrarToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000)
 }
 
+function rpcConTimeout(nombre, params, ms = 10000) {
+  return Promise.race([
+    window._db.rpc(nombre, params),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout - la función no respondió en ' + ms + 'ms')), ms))
+  ])
+}
+
 async function enviarVotos() {
   const votosAEnviar = []
   Object.entries(calificaciones).forEach(([id, cats]) => {
@@ -254,20 +261,20 @@ async function enviarVotos() {
 
   try {
     for (const voto of votosAEnviar) {
-      const { error } = await window._db.rpc('incrementar_voto', {
+      const { error } = await rpcConTimeout('incrementar_voto', {
         proyecto_id: voto.id,
         inc_ingenio: voto.ingenio || 0,
         inc_estetica: voto.estetica || 0,
         inc_funcion: voto.funcion || 0
       })
-      if (error) throw error
+      if (error) throw new Error(error.message + ' (código: ' + error.code + ')')
       proyectosVotados[voto.id] = true
     }
     localStorage.setItem('votados_' + hijoSeleccionado, JSON.stringify(proyectosVotados))
     mostrarPantalla('screen-confirm')
   } catch (err) {
     console.error(err)
-    alert('Error: ' + err.message + '\nVerifica que corriste el SQL en Supabase.')
+    alert('❌ Error al votar:\n' + err.message + '\n\n1. Abre https://supabase.com/dashboard/project/xhtdfurcwxfofefnvsib\n2. Ve a SQL Editor\n3. Pega y ejecuta el contenido de historial.sql')
     $('btn-enviar').disabled = false
     $('btn-enviar').textContent = '💾 Enviar votos'
   }
