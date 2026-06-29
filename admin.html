@@ -6,19 +6,15 @@
 <title>Admin - Votación</title>
 <link rel="stylesheet" href="estilos.css">
 <style>
-  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; }
-  .admin-card { background: #fff; border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width: 400px; width: 100%; }
-  .admin-card h1 { margin-bottom: 1rem; }
-  .admin-card p { color: #666; margin-bottom: 1.5rem; font-size: 0.95rem; }
-  .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; }
-  .btn-reset:hover { background: #c0392b; }
+  .btn-reset { background: #7c3aed; color: #fff; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; }
+  .btn-reset:hover { background: #6d28d9; }
   .mensaje { margin-top: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: 600; display: none; }
-  .mensaje.ok { display: block; background: #d4edda; color: #155724; }
-  .mensaje.error { display: block; background: #f8d7da; color: #721c24; }
-  .cuidado { color: #e74c3c; font-size: 0.85rem; margin-top: 1rem; }
+  .mensaje.ok { display: block; background: #2d1054; color: #c084fc; border: 1px solid #6d28d9; }
+  .mensaje.error { display: block; background: #2d1010; color: #f87171; border: 1px solid #5c2020; }
+  .cuidado { color: #f87171; font-size: 0.85rem; margin-top: 1rem; }
 </style>
 </head>
-<body>
+<body class="admin-body">
 <div class="admin-card">
   <h1>⚙️ Panel Admin</h1>
   <p>Reinicia todos los votos a cero para empezar una nueva ronda.</p>
