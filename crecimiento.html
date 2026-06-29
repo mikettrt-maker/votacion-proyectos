@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crecimiento de Votación</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="stylesheet" href="estilos.css?v=4">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  body { background: #080012; color: #e2d9f3; }
+  .growth-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+  .growth-header { text-align: center; padding: 1rem 0; }
+  .growth-header h1 { font-size: 2.5rem; color: #a855f7; letter-spacing: 2px; }
+  .growth-header .grado-tabs { display: flex; justify-content: center; gap: 0.8rem; margin: 1rem 0; }
+  .growth-header .grado-tab { background: #1a0a2e; border: 2px solid #3b1f6e; color: #9ca3af; padding: 0.5rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+  .growth-header .grado-tab.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+  .growth-header .grado-tab:hover { border-color: #a855f7; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1rem; }
+  .chart-card { background: #140826; border: 1px solid #3b1f6e; border-radius: 16px; padding: 1.2rem; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-card h3 { color: #c084fc; text-align: center; margin-bottom: 0.8rem; font-size: 1.1rem; }
+  .chart-card canvas { max-height: 300px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
+  .stat-box { background: #1a0a2e; border: 1px solid #3b1f6e; border-radius: 12px; padding: 1rem; text-align: center; }
+  .stat-box .num { font-size: 2rem; font-weight: 800; color: #f1c40f; display: block; }
+  .stat-box .label { font-size: 0.8rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-box .sub { font-size: 0.75rem; color: #6b4b8a; margin-top: 0.3rem; }
+  .live-badge { display: inline-block; background: #7c3aed; color: #fff; padding: 0.35rem 1rem; border-radius: 14px; font-size: 0.9rem; font-weight: 700; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+  .footer-info { text-align: center; padding: 1rem; color: #6b4b8a; font-size: 0.85rem; }
+  @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="growth-container">
+  <div class="growth-header">
+    <h1>📈 CRECIMIENTO DE VOTACIÓN</h1>
+    <div><span class="live-badge">🔴 EN VIVO</span></div>
+    <div class="grado-tabs">
+      <button class="grado-tab" data-grado="4°" onclick="seleccionarGrado('4°')">4° Grado</button>
+      <button class="grado-tab active" data-grado="5°" onclick="seleccionarGrado('5°')">5° Grado</button>
+      <button class="grado-tab" data-grado="6°" onclick="seleccionarGrado('6°')">6° Grado</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-box"><span class="num" id="stat-votos">0</span><div class="label">Votos Emitidos</div></div>
+    <div class="stat-box"><span class="num" id="stat-estrellas">0</span><div class="label">Estrellas Totales</div></div>
+    <div class="stat-box"><span class="num" id="stat-proyectos">0</span><div class="label">Proyectos con Votos</div></div>
+    <div class="stat-box"><span class="num" id="stat-promedio">0.0</span><div class="label">Promedio por Voto</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card full">
+      <h3>⭐ Crecimiento de Estrellas por Categoría</h3>
+      <canvas id="chart-crecimiento"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>📊 Votos Acumulados</h3>
+      <canvas id="chart-votos"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>🏆 Top 5 Proyectos (promedio general)</h3>
+      <canvas id="chart-top"></canvas>
+    </div>
+  </div>
+
+  <div class="footer-info">Los datos se actualizan automáticamente</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script src="crecimiento.js"></script>
+</body>
+</html>
