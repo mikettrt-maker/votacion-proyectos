@@ -28,16 +28,18 @@ AS $$
 BEGIN
   UPDATE proyectos
   SET
-    ingenio = ingenio + inc_ingenio,
-    votos_ingenio = votos_ingenio + 1,
-    estetica = estetica + inc_estetica,
-    votos_estetica = votos_estetica + 1,
-    funcion = funcion + inc_funcion,
-    votos_funcion = votos_funcion + 1
+    ingenio = CASE WHEN inc_ingenio > 0 THEN ingenio + inc_ingenio ELSE ingenio END,
+    votos_ingenio = CASE WHEN inc_ingenio > 0 THEN votos_ingenio + 1 ELSE votos_ingenio END,
+    estetica = CASE WHEN inc_estetica > 0 THEN estetica + inc_estetica ELSE estetica END,
+    votos_estetica = CASE WHEN inc_estetica > 0 THEN votos_estetica + 1 ELSE votos_estetica END,
+    funcion = CASE WHEN inc_funcion > 0 THEN funcion + inc_funcion ELSE funcion END,
+    votos_funcion = CASE WHEN inc_funcion > 0 THEN votos_funcion + 1 ELSE votos_funcion END
   WHERE id = proyecto_id;
 
-  INSERT INTO votos_historial (proyecto_id, ingenio, estetica, funcion)
-  VALUES (proyecto_id, inc_ingenio, inc_estetica, inc_funcion);
+  IF inc_ingenio > 0 OR inc_estetica > 0 OR inc_funcion > 0 THEN
+    INSERT INTO votos_historial (proyecto_id, ingenio, estetica, funcion)
+    VALUES (proyecto_id, inc_ingenio, inc_estetica, inc_funcion);
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -223,7 +223,7 @@ function actualizarContadores(presupuestoMax) {
   const total = mismogrado.length - 1
   let completos = 0
   Object.entries(calificaciones).forEach(([id, c]) => {
-    if (id !== hijoSeleccionado && c.ingenio > 0 && c.estetica > 0 && c.funcion > 0) completos++
+    if (id !== hijoSeleccionado && (c.ingenio > 0 || c.estetica > 0 || c.funcion > 0)) completos++
   })
   $('votos-contador').textContent = completos + '/' + total
 }
@@ -238,13 +238,14 @@ function mostrarToast(msg) {
 async function enviarVotos() {
   const votosAEnviar = []
   Object.entries(calificaciones).forEach(([id, cats]) => {
-    if (cats.ingenio > 0 && cats.estetica > 0 && cats.funcion > 0) {
-      if (!proyectosVotados[id]) votosAEnviar.push({ id, ...cats })
+    const total = cats.ingenio + cats.estetica + cats.funcion
+    if (total > 0 && !proyectosVotados[id]) {
+      votosAEnviar.push({ id, ...cats })
     }
   })
 
   if (votosAEnviar.length === 0) {
-    alert('Completa al menos un proyecto (las 3 categorías) para votar.')
+    alert('Da estrellas al menos a un proyecto antes de enviar.')
     return
   }
 
@@ -255,9 +256,9 @@ async function enviarVotos() {
     for (const voto of votosAEnviar) {
       const { error } = await window._db.rpc('incrementar_voto', {
         proyecto_id: voto.id,
-        inc_ingenio: voto.ingenio,
-        inc_estetica: voto.estetica,
-        inc_funcion: voto.funcion
+        inc_ingenio: voto.ingenio || 0,
+        inc_estetica: voto.estetica || 0,
+        inc_funcion: voto.funcion || 0
       })
       if (error) throw error
       proyectosVotados[voto.id] = true
@@ -266,7 +267,7 @@ async function enviarVotos() {
     mostrarPantalla('screen-confirm')
   } catch (err) {
     console.error(err)
-    alert('Error al enviar. Intenta de nuevo.')
+    alert('Error: ' + err.message + '\nVerifica que corriste el SQL en Supabase.')
     $('btn-enviar').disabled = false
     $('btn-enviar').textContent = '💾 Enviar votos'
   }
