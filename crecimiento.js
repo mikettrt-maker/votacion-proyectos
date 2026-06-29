@@ -24,11 +24,6 @@ function procesarDatos(historial, proyectos) {
   const idsGrado = proyectos.filter(p => p.grado === gradoSeleccionado).map(p => p.id)
   const filtrado = historial.filter(h => idsGrado.includes(h.proyecto_id))
 
-  if (filtrado.length === 0) {
-    actualizarStats(0, 0, 0, 0)
-    return
-  }
-
   const totalVotos = filtrado.length
   const totalEstrellas = filtrado.reduce((s, h) => s + h.ingenio + h.estetica + h.funcion, 0)
   const proyectosConVotos = new Set(filtrado.map(h => h.proyecto_id)).size
