@@ -7,7 +7,7 @@ const CATEGORIAS = [
 let proyectos = []
 
 async function cargarResultados() {
-  const { data, error } = await supabase
+  const { data, error } = await window._db
     .from('proyectos')
     .select('*')
     .order('grado', { ascending: true })
@@ -103,7 +103,7 @@ function renderizarRankingCompleto() {
 let canal = null
 
 function suscribir() {
-  canal = supabase.channel('cambios-proyectos')
+  canal = window._db.channel('cambios-proyectos')
   canal.on('postgres_changes',
     { event: '*', schema: 'public', table: 'proyectos' },
     () => cargarResultados()

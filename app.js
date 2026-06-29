@@ -33,7 +33,7 @@ function cargarEstadoLocal() {
 }
 
 async function cargarProyectos() {
-  const { data, error } = await supabase
+  const { data, error } = await window._db
     .from('proyectos')
     .select('*')
     .order('nombre', { ascending: true })
@@ -194,7 +194,7 @@ async function enviarVotos() {
 
   try {
     for (const voto of votosAEnviar) {
-      const { error } = await supabase.rpc('incrementar_voto', {
+      const { error } = await window._db.rpc('incrementar_voto', {
         proyecto_id: voto.id,
         inc_ingenio: voto.ingenio,
         inc_estetica: voto.estetica,

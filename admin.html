@@ -41,7 +41,7 @@ async function resetearVotos() {
   msg.style.display = 'none'
 
   try {
-    const { error } = await supabase
+    const { error } = await window._db
       .from('proyectos')
       .update({
         ingenio: 0, estetica: 0, funcion: 0,
