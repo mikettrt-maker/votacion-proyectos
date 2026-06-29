@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Votación</title>
+<link rel="stylesheet" href="estilos.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; }
+  .admin-card { background: #fff; border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width: 400px; width: 100%; }
+  .admin-card h1 { margin-bottom: 1rem; }
+  .admin-card p { color: #666; margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; }
+  .btn-reset:hover { background: #c0392b; }
+  .mensaje { margin-top: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: 600; display: none; }
+  .mensaje.ok { display: block; background: #d4edda; color: #155724; }
+  .mensaje.error { display: block; background: #f8d7da; color: #721c24; }
+  .cuidado { color: #e74c3c; font-size: 0.85rem; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="admin-card">
+  <h1>⚙️ Panel Admin</h1>
+  <p>Reinicia todos los votos a cero para empezar una nueva ronda.</p>
+  <button id="btn-reset" class="btn-reset" onclick="resetearVotos()">🗑️ REINICIAR TODOS LOS VOTOS</button>
+  <div id="mensaje" class="mensaje"></div>
+  <div class="cuidado">⚠️ Esta acción no se puede deshacer</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+async function resetearVotos() {
+  if (!confirm('¿Estás SEGURO de reiniciar todos los votos a cero?')) return
+  if (!confirm('⚠️ ¡ÚLTIMA ADVERTENCIA! Todos los votos se perderán ¿Continuar?')) return
+
+  const btn = document.getElementById('btn-reset')
+  const msg = document.getElementById('mensaje')
+  btn.disabled = true
+  btn.textContent = 'Reiniciando...'
+  msg.className = 'mensaje'
+  msg.style.display = 'none'
+
+  try {
+    const { error } = await supabase
+      .from('proyectos')
+      .update({
+        ingenio: 0, estetica: 0, funcion: 0,
+        votos_ingenio: 0, votos_estetica: 0, votos_funcion: 0
+      })
+      .neq('id', 'none')
+
+    if (error) throw error
+
+    msg.className = 'mensaje ok'
+    msg.textContent = '✅ ¡Todos los votos han sido reiniciados!'
+    msg.style.display = 'block'
+  } catch (err) {
+    console.error(err)
+    msg.className = 'mensaje error'
+    msg.textContent = '❌ Error: ' + err.message
+    msg.style.display = 'block'
+  }
+
+  btn.disabled = false
+  btn.textContent = '🗑️ REINICIAR TODOS LOS VOTOS'
+}
+</script>
+</body>
+</html>

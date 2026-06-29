@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Votación de Proyectos</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<!-- PANTALLA 1: ELEGIR HIJO -->
+<div id="screen-select" class="screen active">
+  <div class="select-child-header">
+    <h1>🗳️ Votación de Proyectos</h1>
+    <p>Selecciona a <strong>tu hijo</strong> para comenzar</p>
+  </div>
+  <div id="student-grid" class="student-grid"></div>
+  <button id="btn-continuar" class="btn btn-primary" disabled onclick="continuarAVotar()">
+    Continuar →
+  </button>
+</div>
+
+<!-- PANTALLA 2: VOTAR -->
+<div id="screen-vote" class="screen">
+  <div class="vote-header">
+    <div>
+      <span class="hijo-label">Votando como:</span>
+      <span id="hijo-name-display" class="hijo-name"></span>
+    </div>
+    <span id="votos-contador" class="contador">Votados: 0/7</span>
+    <button class="btn-cambiar" onclick="cambiarHijo()">Cambiar</button>
+  </div>
+  <div id="project-list"></div>
+  <button id="btn-enviar" class="btn btn-success" onclick="enviarVotos()">💾 Enviar votos</button>
+  <br><br>
+</div>
+
+<!-- PANTALLA 3: CONFIRMACIÓN -->
+<div id="screen-confirm" class="screen">
+  <div class="confirm-content">
+    <div class="confirm-icon">✅</div>
+    <h2>¡Votos enviados con éxito!</h2>
+    <p>Gracias por participar en la votación.<br>Los resultados se actualizan en vivo en el proyector.</p>
+    <button class="btn btn-primary" onclick="volverInicio()">Volver al inicio</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+<script>document.addEventListener('DOMContentLoaded', async () => { await init(); renderizarEstudiantes() })</script>
+</body>
+</html>
