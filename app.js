@@ -30,6 +30,10 @@ const PRESUPUESTO_POR_PROYECTO = 5
 function $(id) { return document.getElementById(id) }
 
 async function init() {
+  if (localStorage.getItem('yaVoto')) {
+    mostrarPantalla('screen-yavoto')
+    return
+  }
   cargarEstadoLocal()
   await cargarProyectos()
   mostrarPantalla('screen-grade')
@@ -271,6 +275,7 @@ async function enviarVotos() {
       proyectosVotados[voto.id] = true
     }
     localStorage.setItem('votados_' + hijoSeleccionado, JSON.stringify(proyectosVotados))
+    localStorage.setItem('yaVoto', 'true')
     mostrarPantalla('screen-confirm')
   } catch (err) {
     console.error(err)
