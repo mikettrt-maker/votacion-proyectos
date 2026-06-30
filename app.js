@@ -302,3 +302,16 @@ function volverInicio() {
   proyectosVotados = {}
   mostrarPantalla('screen-grade')
 }
+
+function desbloquear() {
+  const pass = prompt('Contraseña del profe:')
+  if (pass === '2025') {
+    localStorage.removeItem('yaVoto')
+    localStorage.removeItem('hijoSeleccionado')
+    localStorage.removeItem('gradoSeleccionado')
+    Object.keys(localStorage).filter(k => k.startsWith('votados_')).forEach(k => localStorage.removeItem(k))
+    location.reload()
+  } else if (pass !== null) {
+    alert('Contraseña incorrecta')
+  }
+}
