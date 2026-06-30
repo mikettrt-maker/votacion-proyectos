@@ -36,8 +36,8 @@
     var targetX, targetY
 
     if (mouse.active) {
-      targetX = mouse.x + (Math.random() - 0.5) * 20
-      targetY = mouse.y + (Math.random() - 0.5) * 20
+      targetX = mouse.x + (Math.random() - 0.5) * 15
+      targetY = mouse.y + (Math.random() - 0.5) * 15
     } else {
       targetX = this.tx
       targetY = this.ty
@@ -47,14 +47,14 @@
     var dy = targetY - this.y
     var dist = Math.sqrt(dx * dx + dy * dy)
 
-    if (dist > 1) {
-      var speed = mouse.active ? 0.15 : 0.03
+    if (dist > 0.5) {
+      var speed = mouse.active ? 0.12 : 0.02
       this.vx += (dx / dist) * speed
       this.vy += (dy / dist) * speed
     }
 
-    this.vx *= 0.9
-    this.vy *= 0.9
+    this.vx *= 0.88
+    this.vy *= 0.88
     this.x += this.vx
     this.y += this.vy
   }
@@ -63,15 +63,11 @@
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
 
-    var grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 2)
-    grad.addColorStop(0, this.color)
-    grad.addColorStop(1, this.color + '00')
-
     ctx.fillStyle = this.color
     ctx.globalAlpha = this.alpha
 
     ctx.shadowColor = this.color
-    ctx.shadowBlur = mouse.active ? 20 : 6
+    ctx.shadowBlur = mouse.active ? 25 : 5
     ctx.fill()
     ctx.shadowBlur = 0
     ctx.globalAlpha = 1
@@ -89,13 +85,13 @@
         var dx = particles[i].x - particles[j].x
         var dy = particles[i].y - particles[j].y
         var dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 120) {
+        if (dist < 140) {
           ctx.beginPath()
           ctx.moveTo(particles[i].x, particles[i].y)
           ctx.lineTo(particles[j].x, particles[j].y)
-          ctx.strokeStyle = particles[i].color
-          ctx.globalAlpha = (1 - dist / 120) * (mouse.active ? 0.3 : 0.08)
-          ctx.lineWidth = mouse.active ? 1 : 0.5
+          ctx.strokeStyle = '#a855f7'
+          ctx.globalAlpha = (1 - dist / 140) * 0.25
+          ctx.lineWidth = 0.8
           ctx.stroke()
           ctx.globalAlpha = 1
         }
@@ -114,9 +110,7 @@
   }
   animate()
 
-  document.addEventListener('mousedown', function(e){ mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true })
-  document.addEventListener('mousemove', function(e){ if (mouse.active) { mouse.x = e.clientX; mouse.y = e.clientY } })
-  document.addEventListener('mouseup', function(){ mouse.active = false; mouse.x = -9999; mouse.y = -9999 })
+  document.addEventListener('mousemove', function(e){ mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true })
   document.addEventListener('mouseleave', function(){ mouse.active = false; mouse.x = -9999; mouse.y = -9999 })
 
   document.addEventListener('touchstart', function(e){ var t = e.touches[0]; mouse.x = t.clientX; mouse.y = t.clientY; mouse.active = true })
