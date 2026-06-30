@@ -65,8 +65,14 @@ function mostrarPantalla(id) {
   $(id).classList.add('active')
 }
 
+function estaBloqueado() {
+  if (localStorage.getItem('yaVoto')) { mostrarPantalla('screen-yavoto'); return true }
+  return false
+}
+
 /* ========== PANTALLA 1: GRADO ========== */
 function seleccionarGrado(grado) {
+  if (estaBloqueado()) return
   gradoSeleccionado = grado
   localStorage.setItem('gradoSeleccionado', grado)
   renderizarEstudiantes()
@@ -94,6 +100,7 @@ function renderizarEstudiantes() {
       <div class="sproject">${p.proyecto}</div>
     `
     card.onclick = () => {
+      if (estaBloqueado()) return
       hijoSeleccionado = p.id
       localStorage.setItem('hijoSeleccionado', p.id)
       const votados = localStorage.getItem('votados_' + p.id)
@@ -106,6 +113,7 @@ function renderizarEstudiantes() {
 }
 
 function irAVotar() {
+  if (estaBloqueado()) return
   if (!hijoSeleccionado) return
   const hijo = proyectos.find(p => p.id === hijoSeleccionado)
   $('votando-nombre').textContent = hijo.nombre
@@ -286,6 +294,7 @@ async function enviarVotos() {
 }
 
 function cambiarHijo() {
+  if (estaBloqueado()) return
   hijoSeleccionado = null
   localStorage.removeItem('hijoSeleccionado')
   proyectosVotados = {}
@@ -295,6 +304,7 @@ function cambiarHijo() {
 }
 
 function volverInicio() {
+  if (estaBloqueado()) return
   hijoSeleccionado = null
   gradoSeleccionado = null
   localStorage.removeItem('hijoSeleccionado')
