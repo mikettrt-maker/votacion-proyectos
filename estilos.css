@@ -12,7 +12,7 @@ h1 { font-size: 1.8rem; text-align: center; padding: 1.2rem; color: #c084fc; }
 h2 { font-size: 1.4rem; margin-bottom: 1rem; color: #c084fc; }
 
 /* === SCREENS === */
-.screen { display: none; padding: 1.2rem; max-width: 900px; margin: 0 auto; }
+.screen { display: none; padding: 1.2rem; max-width: 900px; margin: 0 auto; position:relative; z-index:1; }
 .screen.active { display: block; }
 
 /* === GRADE SELECT SCREEN === */
@@ -294,6 +294,8 @@ body.resultados-body {
   max-width: 1300px;
   margin: 0 auto;
   padding: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .resultados-header {
@@ -445,6 +447,8 @@ body.resultados-body {
   box-shadow: 0 8px 30px rgba(0,0,0,0.3);
   max-width: 450px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 .admin-card h1 { margin-bottom: 1rem; color: #c084fc; font-size: 1.8rem; }
 .admin-card p { color: #9ca3af; margin-bottom: 1.5rem; font-size: 1rem; }
