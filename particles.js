@@ -27,17 +27,17 @@
     this.y = this.ty
     this.vx = 0
     this.vy = 0
-    this.r = Math.random() * 3.5 + 2
+    this.r = Math.random() * 3 + 1.5
     this.color = COLORS[Math.floor(Math.random() * COLORS.length)]
-    this.alpha = Math.random() * 0.4 + 0.3
+    this.alpha = Math.random() * 0.5 + 0.3
   }
 
   Particle.prototype.update = function() {
     var targetX, targetY
 
     if (mouse.active) {
-      targetX = mouse.x + (Math.random() - 0.5) * 15
-      targetY = mouse.y + (Math.random() - 0.5) * 15
+      targetX = mouse.x + (Math.random() - 0.5) * 10
+      targetY = mouse.y + (Math.random() - 0.5) * 10
     } else {
       targetX = this.tx
       targetY = this.ty
@@ -47,14 +47,14 @@
     var dy = targetY - this.y
     var dist = Math.sqrt(dx * dx + dy * dy)
 
-    if (dist > 0.5) {
-      var speed = mouse.active ? 0.12 : 0.02
-      this.vx += (dx / dist) * speed
-      this.vy += (dy / dist) * speed
+    if (dist > 1) {
+      var push = mouse.active ? 0.35 : 0.015
+      this.vx += (dx / dist) * push
+      this.vy += (dy / dist) * push
     }
 
-    this.vx *= 0.88
-    this.vy *= 0.88
+    this.vx *= mouse.active ? 0.78 : 0.92
+    this.vy *= mouse.active ? 0.78 : 0.92
     this.x += this.vx
     this.y += this.vy
   }
@@ -62,12 +62,10 @@
   Particle.prototype.draw = function() {
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
-
     ctx.fillStyle = this.color
-    ctx.globalAlpha = this.alpha
-
+    ctx.globalAlpha = mouse.active ? Math.min(1, this.alpha + 0.3) : this.alpha
     ctx.shadowColor = this.color
-    ctx.shadowBlur = mouse.active ? 25 : 5
+    ctx.shadowBlur = mouse.active ? 30 : 4
     ctx.fill()
     ctx.shadowBlur = 0
     ctx.globalAlpha = 1
@@ -85,13 +83,13 @@
         var dx = particles[i].x - particles[j].x
         var dy = particles[i].y - particles[j].y
         var dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 140) {
+        if (dist < 150) {
           ctx.beginPath()
           ctx.moveTo(particles[i].x, particles[i].y)
           ctx.lineTo(particles[j].x, particles[j].y)
           ctx.strokeStyle = '#a855f7'
-          ctx.globalAlpha = (1 - dist / 140) * 0.25
-          ctx.lineWidth = 0.8
+          ctx.globalAlpha = (1 - dist / 150) * (mouse.active ? 0.5 : 0.12)
+          ctx.lineWidth = mouse.active ? 1.2 : 0.4
           ctx.stroke()
           ctx.globalAlpha = 1
         }
